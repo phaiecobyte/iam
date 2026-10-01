@@ -1,0 +1,88 @@
+# =========================================================================
+# Maven & Build Artifacts
+# =========================================================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/.search
+.m2/
+
+# Avoid ignoring Maven wrapper jar file (jar files are usually ignored below)
+!/.mvn/wrapper/maven-wrapper.jar
+
+# =========================================================================
+# Compiled Java Files & Logs
+# =========================================================================
+*.class
+*.log
+*.ctxt
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# =========================================================================
+# Application Secrets & Local Configurations (Spring Boot)
+# =========================================================================
+.env
+.env.local
+application-local.properties
+application-local.yml
+application-local.yaml
+
+# =========================================================================
+# IDE Settings
+# =========================================================================
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse / Spring Tool Suite (STS)
+.metadata/
+bin/
+tmp/
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
+
+# Visual Studio Code (VS Code)
+.vscode/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+
+# =========================================================================
+# Operating System Files
+# =========================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
