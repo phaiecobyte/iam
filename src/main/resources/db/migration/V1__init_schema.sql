@@ -7,19 +7,10 @@
 -- External ID : UUID
 -- ============================================================
 
-CREATE
-EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE SCHEMA IF NOT EXISTS iam;
-
-SET
-search_path TO iam, public;
-
 
 -- ============================================================
 -- 01. USERS
 -- ============================================================
-
 CREATE TABLE users
 (
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -359,27 +350,14 @@ CREATE TABLE oauth_client_scopes
 (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     uuid       UUID        NOT NULL DEFAULT gen_random_uuid(),
-
     client_id  BIGINT      NOT NULL,
     scope_id   BIGINT      NOT NULL,
-
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-    CONSTRAINT uq_oauth_client_scope_uuid
-        UNIQUE (uuid),
-
-    CONSTRAINT uq_oauth_client_scope
-        UNIQUE (client_id, scope_id),
-
-    CONSTRAINT fk_oauth_client_scope_client
-        FOREIGN KEY (client_id)
-            REFERENCES oauth_clients (id)
-            ON DELETE CASCADE,
-
-    CONSTRAINT fk_oauth_client_scope_scope
-        FOREIGN KEY (scope_id)
-            REFERENCES oauth_scopes (id)
-            ON DELETE CASCADE
+    CONSTRAINT uq_oauth_client_scope_uuid UNIQUE (uuid),
+    CONSTRAINT uq_oauth_client_scope UNIQUE (client_id, scope_id),
+    CONSTRAINT fk_oauth_client_scope_client FOREIGN KEY (client_id) REFERENCES oauth_clients (id) ON DELETE CASCADE,
+    CONSTRAINT fk_oauth_client_scope_scope FOREIGN KEY (scope_id) REFERENCES oauth_scopes (id) ON DELETE CASCADE
 );
 
 
@@ -391,47 +369,33 @@ CREATE TABLE oauth_authorizations
 (
     id                            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     uuid                          UUID         NOT NULL DEFAULT gen_random_uuid(),
-
     registered_client_id          BIGINT       NOT NULL,
-
     principal_name                VARCHAR(500) NOT NULL,
     authorization_grant_type      VARCHAR(100) NOT NULL,
-
     authorized_scopes             TEXT,
-
     authorization_code_value      TEXT,
     authorization_code_issued_at  TIMESTAMPTZ,
     authorization_code_expires_at TIMESTAMPTZ,
     authorization_code_metadata   JSONB,
-
     access_token_value            TEXT,
     access_token_issued_at        TIMESTAMPTZ,
     access_token_expires_at       TIMESTAMPTZ,
     access_token_metadata         JSONB,
     access_token_type             VARCHAR(100),
     access_token_scopes           TEXT,
-
     oidc_id_token_value           TEXT,
     oidc_id_token_issued_at       TIMESTAMPTZ,
     oidc_id_token_expires_at      TIMESTAMPTZ,
     oidc_id_token_metadata        JSONB,
-
     refresh_token_value           TEXT,
     refresh_token_issued_at       TIMESTAMPTZ,
     refresh_token_expires_at      TIMESTAMPTZ,
     refresh_token_metadata        JSONB,
-
     attributes                    JSONB,
-
     created_at                    TIMESTAMPTZ  NOT NULL DEFAULT now(),
 
-    CONSTRAINT uq_oauth_authorizations_uuid
-        UNIQUE (uuid),
-
-    CONSTRAINT fk_oauth_authorizations_client
-        FOREIGN KEY (registered_client_id)
-            REFERENCES oauth_clients (id)
-            ON DELETE CASCADE
+    CONSTRAINT uq_oauth_authorizations_uuid UNIQUE (uuid),
+    CONSTRAINT fk_oauth_authorizations_client FOREIGN KEY (registered_client_id) REFERENCES oauth_clients (id) ON DELETE CASCADE
 );
 
 
@@ -443,25 +407,15 @@ CREATE TABLE oauth_consents
 (
     id                   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     uuid                 UUID         NOT NULL DEFAULT gen_random_uuid(),
-
     registered_client_id BIGINT       NOT NULL,
     principal_name       VARCHAR(500) NOT NULL,
-
     authorities          TEXT         NOT NULL,
-
     created_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
     updated_at           TIMESTAMPTZ  NOT NULL DEFAULT now(),
 
-    CONSTRAINT uq_oauth_consents_uuid
-        UNIQUE (uuid),
-
-    CONSTRAINT uq_oauth_consent_client_principal
-        UNIQUE (registered_client_id, principal_name),
-
-    CONSTRAINT fk_oauth_consents_client
-        FOREIGN KEY (registered_client_id)
-            REFERENCES oauth_clients (id)
-            ON DELETE CASCADE
+    CONSTRAINT uq_oauth_consents_uuid UNIQUE (uuid),
+    CONSTRAINT uq_oauth_consent_client_principal UNIQUE (registered_client_id, principal_name),
+    CONSTRAINT fk_oauth_consents_client FOREIGN KEY (registered_client_id) REFERENCES oauth_clients (id) ON DELETE CASCADE
 );
 
 
@@ -522,7 +476,7 @@ CREATE TABLE security_events
     uuid       UUID         NOT NULL DEFAULT gen_random_uuid(),
     user_id    BIGINT,
     event_type VARCHAR(100) NOT NULL,
-    severity   VARCHAR(30)  NOT NULL DEFAULT 'INFO',
+    severity   VARCHAR(30)  NOT NULL DEFAULT 'I',
     ip_address INET,
     user_agent TEXT,
     details    JSONB,
@@ -622,112 +576,43 @@ CREATE TABLE login_attempts
 -- INDEXES
 -- ============================================================
 
-CREATE INDEX idx_external_identities_user
-    ON external_identities (user_id);
-
-CREATE INDEX idx_user_sessions_user
-    ON user_sessions (user_id);
-
-CREATE INDEX idx_user_sessions_expires
-    ON user_sessions (expires_at);
-
-CREATE INDEX idx_memberships_user
-    ON organization_memberships (user_id);
-
-CREATE INDEX idx_memberships_org
-    ON organization_memberships (organization_id);
-
-CREATE INDEX idx_roles_org
-    ON roles (organization_id);
-
-CREATE INDEX idx_membership_roles_membership
-    ON membership_roles (membership_id);
-
-CREATE INDEX idx_membership_roles_role
-    ON membership_roles (role_id);
-
-CREATE INDEX idx_role_permissions_role
-    ON role_permissions (role_id);
-
-CREATE INDEX idx_role_permissions_permission
-    ON role_permissions (permission_id);
-
-CREATE INDEX idx_role_scopes_role
-    ON role_scopes (role_id);
-
-CREATE INDEX idx_role_scopes_scope
-    ON role_scopes (scope_id);
-
-CREATE INDEX idx_oauth_client_redirect_client
-    ON oauth_client_redirect_uris (client_id);
-
-CREATE INDEX idx_oauth_client_scopes_client
-    ON oauth_client_scopes (client_id);
-
-CREATE INDEX idx_oauth_client_scopes_scope
-    ON oauth_client_scopes (scope_id);
-
-CREATE INDEX idx_oauth_authorizations_client
-    ON oauth_authorizations (registered_client_id);
-
-CREATE INDEX idx_oauth_authorizations_principal
-    ON oauth_authorizations (principal_name);
-
-CREATE INDEX idx_oauth_authorizations_access_token
-    ON oauth_authorizations (access_token_value);
-
-CREATE INDEX idx_oauth_authorizations_refresh_token
-    ON oauth_authorizations (refresh_token_value);
-
-CREATE INDEX idx_oauth_authorizations_code
-    ON oauth_authorizations (authorization_code_value);
-
-CREATE INDEX idx_audit_events_user
-    ON audit_events (user_id);
-
-CREATE INDEX idx_audit_events_organization
-    ON audit_events (organization_id);
-
-CREATE INDEX idx_audit_events_created
-    ON audit_events (created_at);
-
-CREATE INDEX idx_security_events_user
-    ON security_events (user_id);
-
-CREATE INDEX idx_security_events_created
-    ON security_events (created_at);
-
-CREATE INDEX idx_login_attempts_user
-    ON login_attempts (user_id);
-
-CREATE INDEX idx_login_attempts_identifier
-    ON login_attempts (identifier);
-
-CREATE INDEX idx_login_attempts_created
-    ON login_attempts (created_at);
-
-CREATE INDEX idx_email_verifications_user
-    ON email_verifications (user_id);
-
-CREATE INDEX idx_password_resets_user
-    ON password_resets (user_id);
-
-CREATE INDEX idx_mfa_credentials_user
-    ON mfa_credentials (user_id);
+CREATE INDEX idx_external_identities_user ON external_identities (user_id);
+CREATE INDEX idx_user_sessions_user ON user_sessions (user_id);
+CREATE INDEX idx_user_sessions_expires ON user_sessions (expires_at);
+CREATE INDEX idx_memberships_user ON organization_memberships (user_id);
+CREATE INDEX idx_memberships_org ON organization_memberships (organization_id);
+CREATE INDEX idx_roles_org ON roles (organization_id);
+CREATE INDEX idx_membership_roles_membership ON membership_roles (membership_id);
+CREATE INDEX idx_membership_roles_role ON membership_roles (role_id);
+CREATE INDEX idx_role_permissions_role ON role_permissions (role_id);
+CREATE INDEX idx_role_permissions_permission ON role_permissions (permission_id);
+CREATE INDEX idx_role_scopes_role ON role_scopes (role_id);
+CREATE INDEX idx_role_scopes_scope ON role_scopes (scope_id);
+CREATE INDEX idx_oauth_client_redirect_client ON oauth_client_redirect_uris (client_id);
+CREATE INDEX idx_oauth_client_scopes_client ON oauth_client_scopes (client_id);
+CREATE INDEX idx_oauth_client_scopes_scope ON oauth_client_scopes (scope_id);
+CREATE INDEX idx_oauth_authorizations_client ON oauth_authorizations (registered_client_id);
+CREATE INDEX idx_oauth_authorizations_principal ON oauth_authorizations (principal_name);
+CREATE INDEX idx_oauth_authorizations_access_token ON oauth_authorizations (access_token_value);
+CREATE INDEX idx_oauth_authorizations_refresh_token ON oauth_authorizations (refresh_token_value);
+CREATE INDEX idx_oauth_authorizations_code ON oauth_authorizations (authorization_code_value);
+CREATE INDEX idx_audit_events_user ON audit_events (user_id);
+CREATE INDEX idx_audit_events_organization ON audit_events (organization_id);
+CREATE INDEX idx_audit_events_created ON audit_events (created_at);
+CREATE INDEX idx_security_events_user ON security_events (user_id);
+CREATE INDEX idx_security_events_created ON security_events (created_at);
+CREATE INDEX idx_login_attempts_user ON login_attempts (user_id);
+CREATE INDEX idx_login_attempts_identifier ON login_attempts (identifier);
+CREATE INDEX idx_login_attempts_created ON login_attempts (created_at);
+CREATE INDEX idx_email_verifications_user ON email_verifications (user_id);
+CREATE INDEX idx_password_resets_user ON password_resets (user_id);
+CREATE INDEX idx_mfa_credentials_user ON mfa_credentials (user_id);
 
 
 -- ============================================================
 -- PARTIAL INDEXES
 -- ============================================================
-
-CREATE UNIQUE INDEX uq_active_signing_key
-    ON signing_keys (status) WHERE status = 'A';
-
-CREATE INDEX idx_active_sessions
-    ON user_sessions (user_id, expires_at) WHERE revoked_at IS NULL;
-
-CREATE INDEX idx_active_password_resets
-    ON password_resets (user_id, expires_at) WHERE used_at IS NULL;
-
-CREATE INDEX idx_active_email_verifications
-    ON email_verifications (user_id, expires_at) WHERE verified_at IS NULL;
+CREATE UNIQUE INDEX uq_active_signing_key ON signing_keys (status) WHERE status = 'A';
+CREATE INDEX idx_active_sessions ON user_sessions (user_id, expires_at) WHERE revoked_at IS NULL;
+CREATE INDEX idx_active_password_resets ON password_resets (user_id, expires_at) WHERE used_at IS NULL;
+CREATE INDEX idx_active_email_verifications ON email_verifications (user_id, expires_at) WHERE verified_at IS NULL;
