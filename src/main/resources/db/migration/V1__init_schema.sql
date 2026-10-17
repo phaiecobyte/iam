@@ -29,7 +29,7 @@ CREATE TABLE users
 
     CONSTRAINT uq_users_uuid UNIQUE (uuid),
     CONSTRAINT uq_users_email UNIQUE (email_normalized),
-    CONSTRAINT ck_users_status CHECK (status IN ('P', 'A', 'S', 'L', 'D'))
+    CONSTRAINT ck_users_status CHECK (status IN ('P', 'A', 'S', 'L', 'I'))
 );
 
 
@@ -116,7 +116,7 @@ CREATE TABLE organizations
 
     CONSTRAINT uq_organizations_uuid UNIQUE (uuid),
     CONSTRAINT uq_organizations_slug UNIQUE (slug),
-    CONSTRAINT ck_organizations_status CHECK (status IN ('A', 'S', 'D'))
+    CONSTRAINT ck_organizations_status CHECK (status IN ('A', 'S','I'))
 );
 
 
@@ -431,14 +431,14 @@ CREATE TABLE signing_keys
     algorithm             VARCHAR(50)  NOT NULL,
     public_key            TEXT         NOT NULL,
     encrypted_private_key TEXT         NOT NULL,
-    status                VARCHAR(30)  NOT NULL DEFAULT 'ACTIVE',
+    status                VARCHAR(30)  NOT NULL DEFAULT 'A',
     valid_from            TIMESTAMPTZ  NOT NULL,
     valid_until           TIMESTAMPTZ,
     created_at            TIMESTAMPTZ  NOT NULL DEFAULT now(),
 
     CONSTRAINT uq_signing_keys_uuid UNIQUE (uuid),
     CONSTRAINT uq_signing_keys_key_id UNIQUE (key_id),
-    CONSTRAINT ck_signing_keys_status CHECK (status IN ('ACTIVE','RETIRING','RETIRED'))
+    CONSTRAINT ck_signing_keys_status CHECK (status IN ('A','RETIRING','RETIRED'))
 );
 
 

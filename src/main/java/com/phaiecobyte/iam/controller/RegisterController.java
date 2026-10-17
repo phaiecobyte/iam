@@ -1,0 +1,37 @@
+package com.phaiecobyte.iam.controller;
+
+import com.phaiecobyte.iam.dto.ApiResponse;
+import com.phaiecobyte.iam.dto.req.UserReq;
+import com.phaiecobyte.iam.dto.res.UserRes;
+import com.phaiecobyte.iam.service.EmailVerifyService;
+import com.phaiecobyte.iam.service.UserService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+@RequestMapping("/api/v1/auth")
+public class RegisterController {
+    private final UserService userService;
+    private final EmailVerifyService emailVerifyService;
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserRes>> register(@RequestBody @Valid UserReq req){
+        log.info("=============== Client send req for create user ================");
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success("User created successfully...!",userService.create(req)));
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(@RequestParam String token) {
+        log.info("============= start verify email =========");
+        emailVerifyService.verifyEmail(token);
+        return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+    }
+}
