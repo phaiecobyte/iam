@@ -11,7 +11,6 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "uuid", ignore = true)
-    @Mapping(target = "emailNormalized", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "emailVerifiedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

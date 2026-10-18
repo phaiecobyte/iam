@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/api/v1/auth")
-public class RegisterController {
+public class AuthController {
     private final UserService userService;
     private final EmailVerifyService emailVerifyService;
 
@@ -33,5 +33,13 @@ public class RegisterController {
         log.info("============= start verify email =========");
         emailVerifyService.verifyEmail(token);
         return ResponseEntity.ok(ApiResponse.success("Email verified successfully", null));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(@RequestParam String email){
+        log.info("============= start resend-verification ===========");
+        emailVerifyService.resendVerificationEmail(email);
+        String message = "If the account requires verification, a verification email will be sent.";
+        return ResponseEntity.ok(ApiResponse.success(message,null));
     }
 }

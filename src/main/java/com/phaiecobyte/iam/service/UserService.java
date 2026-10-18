@@ -31,17 +31,15 @@ public class UserService {
 
         log.info("================== Process Create User ================");
 
-        String email = req.getEmail().trim();
-        String normalizedEmail = email.toLowerCase(Locale.ROOT);
+        String email = req.getEmail().toLowerCase(Locale.ROOT).strip();
 
-        if (userRepository.existsByEmailNormalized(normalizedEmail)) {
+        if (userRepository.existsByEmail(email)) {
             throw new BusinessException(ErrorCode.CLIENT_0001,"Email already exist!");
         }
 
         User user = userMapper.toEntity(req);
         user.setUuid(UUID.randomUUID());
         user.setEmail(email);
-        user.setEmailNormalized(normalizedEmail);
         user.setStatus(LocalConstant.STATUS_PENDING);
         user.setCreatedAt(LocalDateTime.now());
         user.setCreatedBy("SYS");

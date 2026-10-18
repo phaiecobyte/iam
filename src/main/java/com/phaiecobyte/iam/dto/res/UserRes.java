@@ -10,7 +10,6 @@ import java.util.UUID;
 public class UserRes {
     private UUID uuid;
     private String email;
-    private String emailNormalized;
     private String firstName;
     private String lastName;
     private String displayName;

@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -131,5 +132,25 @@ public class EmailVerifyService {
 
     private BusinessException invalidToken() {
         return new BusinessException(ErrorCode.CLIENT_0002);
+    }
+
+    @Transactional
+    public void resendVerificationEmail(String email){
+        log.info("Process resendVerificationEmail");
+        if(email == null || email.isBlank()){
+            log.info("Email is null...!");
+            return;
+        }
+
+        userRepository.findByEmail(email.toLowerCase(Locale.ROOT).strip())
+                .filter(user -> LocalConstant.STATUS_PENDING.equals(user.getStatus())
+                        && user.getEmailVerifiedAt() == null)
+                .ifPresent(user -> {
+                    emailVerifyRepository.findAllByUserAndVerifiedAtIsNull(user)
+                            .forEach(verify->verify.setExpiresAt(LocalDateTime.now()));
+                    emailVerifyRepository.flush(); //ensures the previous token expirations are written before the new token is created.
+                    createVerificationToken(user);
+                });
+
     }
 }

@@ -25,9 +25,6 @@ public class User {
     @Column(name = "email", nullable = false, length = 320)
     private String email;
 
-    @Column(name = "email_normalized", nullable = false, length = 320)
-    private String emailNormalized;
-
     @Column(name = "first_name", length = 100)
     private String firstName;
 
