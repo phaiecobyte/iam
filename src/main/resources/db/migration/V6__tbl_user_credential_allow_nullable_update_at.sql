@@ -1,0 +1,1 @@
+ALTER TABLE public.user_credentials ALTER COLUMN updated_at DROP NOT NULL;

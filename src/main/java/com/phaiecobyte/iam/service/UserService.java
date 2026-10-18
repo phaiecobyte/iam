@@ -7,10 +7,13 @@ import com.phaiecobyte.iam.exception.BusinessException;
 import com.phaiecobyte.iam.exception.ErrorCode;
 import com.phaiecobyte.iam.mapper.UserMapper;
 import com.phaiecobyte.iam.model.User;
+import com.phaiecobyte.iam.model.UserCredential;
+import com.phaiecobyte.iam.repository.UserCredentialRepository;
 import com.phaiecobyte.iam.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final EmailVerifyService emailVerifyService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserCredentialRepository userCredentialRepository;
 
 
     @Transactional
@@ -45,6 +50,14 @@ public class UserService {
         user.setCreatedBy("SYS");
 
         User savedUser = userRepository.save(user);
+
+        UserCredential credential = new UserCredential();
+        credential.setUser(savedUser);
+        credential.setFailedAttempts(0);
+        credential.setPassword(passwordEncoder.encode(req.getPassword()));
+
+        userCredentialRepository.save(credential);
+
         emailVerifyService.createVerificationToken(savedUser);
 
         return userMapper.toRes(savedUser);
