@@ -6,9 +6,11 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
 
-    E_0001(HttpStatus.UNAUTHORIZED,"ERR-0001","Invalid username or password"),
-    CLIENT_0001(HttpStatus.CONFLICT,"CLIENT-ERR001","User already exist"),
-    CLIENT_0002(HttpStatus.BAD_REQUEST,"CLIENT-ERR002","Invalid or expired email verification token");
+    CLIENT_0001(HttpStatus.CONFLICT,"CLIENT-0001","User already exist"),
+    CLIENT_0002(HttpStatus.BAD_REQUEST,"CLIENT-0002","Invalid or expired email verification token"),
+    CLIENT_0003(HttpStatus.UNAUTHORIZED,"CLIENT-0003","Invalid username or password"),
+    CLIENT_0004(HttpStatus.LOCKED,"CLIENT-0004","Account temporarily locked. Try again later."),
+    CLIENT_0005(HttpStatus.FORBIDDEN,"CLIENT-0005","Account is not eligible to sign in");
 
     private final HttpStatus httpStatus;
     private final String code;

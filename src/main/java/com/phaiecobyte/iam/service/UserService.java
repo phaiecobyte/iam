@@ -38,9 +38,12 @@ public class UserService {
 
         String email = req.getEmail().toLowerCase(Locale.ROOT).strip();
 
+        log.info("Checking email exist or not......!");
         if (userRepository.existsByEmail(email)) {
+            log.error("Email already exist......!");
             throw new BusinessException(ErrorCode.CLIENT_0001,"Email already exist!");
         }
+        log.info("PASS......!");
 
         User user = userMapper.toEntity(req);
         user.setUuid(UUID.randomUUID());
@@ -50,6 +53,8 @@ public class UserService {
         user.setCreatedBy("SYS");
 
         User savedUser = userRepository.save(user);
+        log.info("Saved user successfully......!");
+
 
         UserCredential credential = new UserCredential();
         credential.setUser(savedUser);
@@ -57,8 +62,10 @@ public class UserService {
         credential.setPassword(passwordEncoder.encode(req.getPassword()));
 
         userCredentialRepository.save(credential);
+        log.info("Save credential successfully......!");
 
         emailVerifyService.createVerificationToken(savedUser);
+        log.info("Create verification token successfully...!");
 
         return userMapper.toRes(savedUser);
     }
