@@ -8,7 +8,7 @@ public enum ErrorCode {
 
     CLIENT_0001(HttpStatus.CONFLICT,"CLIENT-0001","User already exist"),
     CLIENT_0002(HttpStatus.BAD_REQUEST,"CLIENT-0002","Invalid or expired email verification token"),
-    CLIENT_0003(HttpStatus.UNAUTHORIZED,"CLIENT-0003","Invalid username or password"),
+    CLIENT_0003(HttpStatus.UNAUTHORIZED,"CLIENT-0003","Invalid email or password"),
     CLIENT_0004(HttpStatus.LOCKED,"CLIENT-0004","Account temporarily locked. Try again later."),
     CLIENT_0005(HttpStatus.FORBIDDEN,"CLIENT-0005","Account is not eligible to sign in");
 

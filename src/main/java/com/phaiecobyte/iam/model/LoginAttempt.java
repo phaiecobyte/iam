@@ -4,15 +4,18 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.net.InetAddress;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "login_attempts")
+@EntityListeners(AuditingEntityListener.class)
 public class LoginAttempt {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,9 +44,10 @@ public class LoginAttempt {
     @Column(name = "failure_reason", length = 200)
     private String failureReason;
 
+    @CreatedDate
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
 
 }

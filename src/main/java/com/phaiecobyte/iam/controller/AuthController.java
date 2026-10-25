@@ -7,6 +7,7 @@ import com.phaiecobyte.iam.dto.res.UserRes;
 import com.phaiecobyte.iam.service.AuthService;
 import com.phaiecobyte.iam.service.EmailVerifyService;
 import com.phaiecobyte.iam.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,8 +47,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginReq req) {
-        return ResponseEntity.ok(ApiResponse.success("Login successful", authService.login(req)));
+    public ResponseEntity<ApiResponse<Map<String, Object>>> login(@RequestBody LoginReq req, HttpServletRequest httpServletReq) {
+        return ResponseEntity.ok(ApiResponse.success("Login successful", authService.login(req,httpServletReq)));
     }
 
 }
