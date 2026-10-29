@@ -8,15 +8,17 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-@Getter
-@Setter
-@Entity
-@Table(name = "oauth_clients")
+@Getter @Setter
+@Entity @Table(name = "oauth_clients")
+@EntityListeners(AuditingEntityListener.class)
 public class OauthClient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +50,8 @@ public class OauthClient {
     @Column(name = "scopes", nullable = false, length = Integer.MAX_VALUE)
     private String scopes;
 
+    private String status = "A";
+
     @ColumnDefault("'{}'")
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "client_settings", nullable = false)
@@ -60,18 +64,21 @@ public class OauthClient {
 
     @ColumnDefault("now()")
     @Column(name = "client_id_issued_at", nullable = false)
-    private OffsetDateTime clientIdIssuedAt;
+    private LocalDateTime clientIdIssuedAt;
 
     @Column(name = "client_secret_expires_at")
-    private OffsetDateTime clientSecretExpiresAt;
+    private LocalDateTime clientSecretExpiresAt;
 
+    @CreatedDate
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
+
+    @LastModifiedDate
     @ColumnDefault("now()")
     @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.RESTRICT)

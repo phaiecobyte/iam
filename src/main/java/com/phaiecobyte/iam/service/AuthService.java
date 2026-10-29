@@ -11,6 +11,7 @@ import com.phaiecobyte.iam.repository.UserCredentialRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -39,6 +40,9 @@ public class AuthService {
     private final LoginAttemptRepository loginAttemptRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
+
+    @Value("${app.jwt.issuer}")
+    private String issuer;
 
 
 
@@ -107,7 +111,7 @@ public class AuthService {
         Instant expiredAt = Instant.now().plusMillis(900000); // 15 min
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("iam")
+                .issuer(issuer)
                 .subject(user.getUuid().toString())
                 .issuedAt(issuedAt)
                 .expiresAt(expiredAt)

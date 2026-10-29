@@ -6,14 +6,15 @@ import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
-@Entity
-@Table(name = "user_roles")
+@Getter @Setter
+@Entity @Table(name = "user_roles")
+@EntityListeners(AuditingEntityListener.class)
 public class UserRole {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,9 +40,10 @@ public class UserRole {
     @JoinColumn(name = "assigned_by_user_id")
     private User assignedByUser;
 
+    @CreatedDate
     @ColumnDefault("now()")
     @Column(name = "assigned_at", nullable = false)
-    private OffsetDateTime assignedAt;
+    private LocalDateTime assignedAt;
 
 
 }

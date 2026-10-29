@@ -4,14 +4,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
-@Entity
-@Table(name = "oauth_client_redirect_uris")
+@Getter @Setter
+@Entity @Table(name = "oauth_client_redirect_uris")
+@EntityListeners(AuditingEntityListener.class)
 public class OauthClientRedirectUris {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,9 +26,13 @@ public class OauthClientRedirectUris {
     @Column(name = "redirect_uri", nullable = false, length = Integer.MAX_VALUE)
     private String redirectUri;
 
+    @CreatedDate
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
+    private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY,optional = false)
+    @JoinColumn(name = "client_id", nullable = false)
+    private OauthClient client;
 
 }
