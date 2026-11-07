@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.sql.BatchUpdateException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -127,15 +126,23 @@ public class OauthClientService {
     @Transactional
     public Map<String,Object> patchClientStatus(String clientId, String status){
 
-        if(!Set.of(STATUS_ACTIVE,STATUS_INACTIVE,STATUS_SUSPEND).contains(status)){
-            throw new BusinessException(ErrorCode.CLIENT_0006,"Invalid status client status");
+        if(!status.equals(STATUS_ACTIVE) || !status.equals(STATUS_INACTIVE) || !status.equals(STATUS_SUSPEND)){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Invalid oauth client status!,valid status[A,I,S]");
         }
 
         OauthClient client = oauthClientRepository.findByClientId(clientId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CLIENT_0007));
 
 
-        return null;
+        client.setStatus(status);
+        oauthClientRepository.save(client);
+
+        Map<String,Object> response = new LinkedHashMap<>();
+        response.put("clientId",clientId);
+        response.put("clientName",client.getClientName());
+        response.put("status",client.getStatus());
+
+        return response;
     }
 
     private void validateConfig(
