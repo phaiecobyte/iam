@@ -35,6 +35,9 @@ public class OauthClient {
     @Column(name = "client_secret", length = 500)
     private String clientSecret;
 
+    @Column(name = "secret_vali_days")
+    private Integer secretValiDays;
+
     @Column(name = "client_name", nullable = false, length = 200)
     private String clientName;
 
@@ -84,6 +87,4 @@ public class OauthClient {
     @OnDelete(action = OnDeleteAction.RESTRICT)
     @JoinColumn(name = "application_id")
     private Application application;
-
-
 }

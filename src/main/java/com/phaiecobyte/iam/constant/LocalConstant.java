@@ -6,6 +6,9 @@ public class LocalConstant {
     public static String STATUS_PENDING="P";
     public static String STATUS_SUSPEND="A";
 
+    public static final String CLIENT_TYPE_PUBLIC = "PUBLIC";
+    public static final String CLIENT_TYPE_CONFIDENTIAL="CONFIDENTIAL";
+
     public static String STATUS_RETIRING="RETIRING";
     public static String STATUS_RETIRED="RETIRED";
 

@@ -37,20 +37,20 @@ public class OauthClientService {
         log.info("=============== PROCESS REGISTER APP ===============");
 
         log.info("Checking client type......!");
-        if(!Set.of("CONFIDENTIAL", "PUBLIC").contains(req.getClientType())){
+        if(!Set.of(CLIENT_TYPE_CONFIDENTIAL,CLIENT_TYPE_PUBLIC).contains(req.getClientType())){
             log.error("FAILED......!");
-            throw new IllegalArgumentException("Invalid client type");
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Invalid client type. Valid[PUBLIC,CONFIDENTIAL]");
         }
         log.info("PASS");
 
         log.info("Checking application");
         Application app = applicationRepository.findByCode(req.getAppCode())
-                .orElseThrow(()-> new IllegalArgumentException("App not found...!"));
+                .orElseThrow(()-> new BusinessException(ErrorCode.CLIENT_0007));
 
         log.info("Checking app status active or not......!");
         if(!STATUS_ACTIVE.equals(app.getStatus())){
             log.error("FAILED");
-            throw new IllegalArgumentException("App is not active......!");
+            throw new BusinessException(ErrorCode.CLIENT_0006,"App is not active......!");
         }
         log.info("PASS");
 
@@ -122,16 +122,20 @@ public class OauthClientService {
 
     }
 
-
     @Transactional
     public Map<String,Object> patchClientStatus(String clientId, String status){
+        log.info("========= Process Patch Oauth Client Status ===========");
 
+        log.info("Validate status");
         if(!status.equals(STATUS_ACTIVE) || !status.equals(STATUS_INACTIVE) || !status.equals(STATUS_SUSPEND)){
             throw new BusinessException(ErrorCode.CLIENT_0006,"Invalid oauth client status!,valid status[A,I,S]");
         }
+        log.info("PASS...!");
 
+        log.info("Check client exist or not...!");
         OauthClient client = oauthClientRepository.findByClientId(clientId)
                 .orElseThrow(()->new BusinessException(ErrorCode.CLIENT_0007));
+        log.info("PASS...!");
 
 
         client.setStatus(status);
@@ -141,6 +145,107 @@ public class OauthClientService {
         response.put("clientId",clientId);
         response.put("clientName",client.getClientName());
         response.put("status",client.getStatus());
+
+        log.info("===== Patch Oauth Client Status Successfully...!=======");
+        return response;
+    }
+
+    @Transactional
+    public Map<String,Object> rotateClientSecret(String clientId){
+        log.info("============ Process Rotate Client Secret ===========");
+
+        OauthClient client = oauthClientRepository.findByClientId(clientId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CLIENT_0007));
+
+
+        if(!CLIENT_TYPE_CONFIDENTIAL.equals(client.getClientType())){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Only confidential client can have client secrets");
+        }
+
+        log.info("Generating secret");
+        byte[] secureBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(secureBytes);
+        String rawSecret = Base64.getUrlEncoder()
+                .withoutPadding()
+                .encodeToString(secureBytes);
+
+        log.info("Hashing secret");
+        String hashSecret = passwordEncoder.encode(rawSecret);
+
+        log.info("Calculate expiration");
+        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime expiresAt = client.getSecretValiDays() != null
+                        ? issuedAt.plusDays(client.getSecretValiDays())
+                        : null;
+
+        client.setClientSecret(hashSecret);
+        client.setClientSecretExpiresAt(expiresAt);
+
+        oauthClientRepository.save(client);
+
+
+        Map<String,Object> response = new LinkedHashMap<>();
+        response.put("clientId",clientId);
+        response.put("clientName",client.getClientName());
+        response.put("clientSecret",rawSecret);
+        response.put("secretValiDay",client.getSecretValiDays());
+        response.put("clientSecretExpiresAt",client.getClientSecretExpiresAt());
+
+        return response;
+    }
+
+    @Transactional
+    public Map<String,Object> revokeClientSecret(String clientId){
+        log.info("============ Process Revoke Client Secret ===========");
+
+        OauthClient client = oauthClientRepository.findByClientId(clientId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CLIENT_0007,"Client:"+clientId+" is not found"));
+
+        if(!CLIENT_TYPE_CONFIDENTIAL.equals(client.getClientType())){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Only client confidential can have client secret");
+        }
+
+        if(client.getClientSecret() == null){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Client secret is already revoked");
+        }
+
+        client.setClientSecret(null);
+        client.setClientSecretExpiresAt(null);
+
+        oauthClientRepository.save(client);
+
+        Map<String,Object> response = new LinkedHashMap<>();
+        response.put("clientId", client.getClientId());
+        response.put("clientName", client.getClientName());
+        response.put("secretRevoked", true);
+        response.put("secretValiDays", client.getSecretValiDays());
+
+        return response;
+    }
+
+    @Transactional
+    public Map<String,Object> configureClientSecretExpiration(String clientId,Integer validityDays){
+        log.info("========= Process Config Client Secret Expiration =========");
+
+        OauthClient client = oauthClientRepository.findByClientId(clientId)
+                .orElseThrow(()->new BusinessException(ErrorCode.CLIENT_0007,"Client:"+clientId+" is not found!"));
+
+        if(!CLIENT_TYPE_CONFIDENTIAL.equals(client.getClientType())){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Only confidential clients support secret expiration");
+        }
+
+        if(validityDays != null && validityDays <= 0){
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Secret validity days must be greater then 0");
+        }
+
+        client.setSecretValiDays(validityDays);
+        oauthClientRepository.save(client);
+
+        Map<String,Object> response = new LinkedHashMap<>();
+        response.put("clientId", client.getClientId());
+        response.put("clientName", client.getClientName());
+        response.put("secretValiDays", client.getSecretValiDays());
+        response.put("clientSecretExpiresAt", client.getClientSecretExpiresAt());
 
         return response;
     }
@@ -166,7 +271,7 @@ public class OauthClientService {
         );
 
         if (!allowedGrants.containsAll(grantTypes)) {
-            throw new BusinessException(ErrorCode.CLIENT_0006,"Unsupported grant type");
+            throw new BusinessException(ErrorCode.CLIENT_0006,"Unsupported grant type. Supported[authorization_code,refresh_token,client_credentials]");
         }
 
         if (grantTypes.contains("refresh_token") && !grantTypes.contains("authorization_code")) {

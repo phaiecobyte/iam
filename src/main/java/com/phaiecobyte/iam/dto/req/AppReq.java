@@ -13,4 +13,5 @@ public class AppReq {
     private List<String> grantTypes;
     private List<String> scopes;
     private List<String> redirectUri;
+    private int secretValiDay;
 }
